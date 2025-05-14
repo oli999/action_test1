@@ -56,6 +56,6 @@ jobs:
             # 7. 실행 상태 확인
             pm2 list
             echo "배포 완료"
-            exit 0 
+            # exit 0 
           EOF
         shell: bash

@@ -52,6 +52,7 @@ jobs:
             pm2 start app.js --name node_app
 
             # 6. 재부팅 자동실행 저장 (최초 1회 수동 실행 필요할 수 있음)
+            
             pm2 save
             # sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u bitnami --hp /home/bitnami
 

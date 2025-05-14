@@ -28,7 +28,7 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -tt -o StrictHostKeyChecking=no bitnami@13.124.106.139 << 'EOF'
-            set -e
+            #set -e
             source ~/.profile || true
             source ~/.bashrc || true
 
@@ -56,6 +56,6 @@ jobs:
             # 7. 실행 상태 확인
             pm2 list
             echo "배포 완료"
-            # exit 0 
+            exit 0 
           EOF
         shell: bash

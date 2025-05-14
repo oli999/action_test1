@@ -28,8 +28,11 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no bitnami@13.124.106.139 << 'EOF'
+            # 스트립트 실패시 즉시 중단단
+            set -e 
+
             # 1. 작업 디렉토리로 이동
-            cd /bitnami/node_app
+            cd /home/bitnami/node_app
 
             # 2. 기존 코드 삭제
             rm -rf *

@@ -1,0 +1,55 @@
+name: Deploy Node.js app to EC2
+
+on:
+  push:
+    branches:
+      - master  # master 브랜치에 push될 때마다 실행
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Add SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+        shell: bash
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no bitnami@13.124.106.139 << 'EOF'
+            # 1. 작업 디렉토리로 이동
+            cd /bitnami/node_app
+
+            # 2. 기존 코드 삭제
+            rm -rf *
+
+            # 3. GitHub에서 최신 코드 받기
+            git clone https://github.com/${{ github.repository }} temp_app
+            mv temp_app/* . && mv temp_app/.* . 2>/dev/null || true
+            rm -rf temp_app
+
+            # 4. 의존성 설치 (혹시 모를 future 확장 대비)
+            npm install
+
+            # 5. PM2 설치 (최초 1회만 필요)
+            command -v pm2 || npm install -g pm2
+
+            # 6. PM2로 백그라운드 실행 (재시작 포함)
+            pm2 delete node_app || true
+            pm2 start app.js --name node_app
+
+            # 7. PM2 상태 확인 (로그용)
+            pm2 list
+          EOF
+        shell: bash

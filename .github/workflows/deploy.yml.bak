@@ -9,7 +9,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -26,32 +25,33 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
         shell: bash
 
-      - name: Copy source code to EC2 via SCP
-        run: |
-          ssh -o StrictHostKeyChecking=no bitnami@13.124.106.139 "mkdir -p /home/bitnami/node_app"
-          scp -o StrictHostKeyChecking=no -r ./ bitnami@13.124.106.139:/home/bitnami/node_app/
-
-      - name: Remote install & restart with PM2
+      - name: Deploy to EC2
         run: |
           ssh -tt -o StrictHostKeyChecking=no bitnami@13.124.106.139 << 'EOF'
-            cd /home/bitnami/node_app
+            #set -e
+            source ~/.profile || true
+            source ~/.bashrc || true
 
-            # 1. 의존성 설치
+            mkdir -p /home/bitnami/node_app
+            cd /home/bitnami/node_app
+            find . -mindepth 1 -delete
+            git clone https://github.com/${{ github.repository }} .
+
+            # 3. 의존성 설치
             npm install
 
-            # 2. PM2 설치 (최초 1회만 설치됨)
+            # 4. PM2 설치 (최초 1회만 설치됨)
             command -v pm2 || npm install -g pm2
 
-            # 3. 기존 앱 종료 후 재실행
+            # 5. 백그라운드 실행
             pm2 delete node_app || true
             pm2 start app.js --name node_app
 
-            # 4. 재부팅 자동 실행 등록
+            # 6. 재부팅 자동실행 저장 (최초 1회 수동 실행 필요할 수 있음)
             pm2 save
-
-            # 5. 상태 확인
+            # 7. 실행 상태 확인
             pm2 list
             echo "배포 완료"
-            exit 0
+            exit 0 
           EOF
         shell: bash

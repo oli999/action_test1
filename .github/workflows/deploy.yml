@@ -26,9 +26,15 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
         shell: bash
 
+      - name: Clean target directory in EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no bitnami@13.124.106.139 "
+            mkdir -p /home/bitnami/node_app && \
+            find /home/bitnami/node_app -mindepth 1 -delete
+          "
+
       - name: Copy source code to EC2 via SCP
         run: |
-          ssh -o StrictHostKeyChecking=no bitnami@13.124.106.139 "mkdir -p /home/bitnami/node_app"
           scp -o StrictHostKeyChecking=no -r ./ bitnami@13.124.106.139:/home/bitnami/node_app/
 
       - name: Remote install & restart with PM2
@@ -39,10 +45,10 @@ jobs:
             # 1. 의존성 설치
             npm install
 
-            # 2. PM2 설치 (최초 1회만 설치됨)
+            # 2. PM2 설치 (최초 1회만 필요)
             command -v pm2 || npm install -g pm2
 
-            # 3. 기존 앱 종료 후 재실행
+            # 3. 기존 앱 종료 후 재시작
             pm2 delete node_app || true
             pm2 start app.js --name node_app
 
@@ -51,7 +57,7 @@ jobs:
 
             # 5. 상태 확인
             pm2 list
-            echo "배포 완료"
+            echo "✅ 배포 완료"
             exit 0
           EOF
         shell: bash

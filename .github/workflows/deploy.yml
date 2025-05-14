@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -57,5 +57,7 @@ jobs:
 
             # 7. 실행 상태 확인
             pm2 list
+            echo "배포 완료"
+            exit 0 
           EOF
         shell: bash
